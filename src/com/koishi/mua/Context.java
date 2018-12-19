@@ -2,11 +2,13 @@ package com.koishi.mua;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Vector;
 
 public class Context {
 
 	private Context parent;
 	private Map<String, Value> context;
+	private Vector<Value> args;
 	private Value result;
 	private boolean accept;
 
@@ -97,10 +99,16 @@ public class Context {
 		System.out.println("}");
 	}
 
+	Vector<Value> getArgs()
+	{
+		return args;
+	}
+
 	Context() {
 		this.accept = false;
 		this.result = null;
 		this.parent = null;
 		this.context = new HashMap<>();
+		this.args = new Vector<>();
 	}
 }

@@ -8,11 +8,20 @@ public class Interpreter {
 	private Preprocessor preprocessor;
 	private Lexer lexer;
 	private Parser parser;
-	private Processor processor;
+	private Vector<Value> olds;
 
 	public Value interpret(String src) throws Exception {
-		var executable = new List(parser.parse(lexer.parse(preprocessor.parse(src))));
-		return executable.execute(processor, context);
+		var toks = new Vector<Value>(olds);
+		toks.addAll(parser.parse(lexer.parse(preprocessor.parse(src))));
+		var executable = new List(toks);
+		try {
+			var res = executable.execute(context);
+			olds.clear();
+			return res;
+		} catch (Parser.EOFException e) {
+			olds.addAll(toks);
+			throw e;
+		}
 	}
 
 	public Interpreter() {
@@ -31,6 +40,6 @@ public class Interpreter {
 		this.preprocessor = new Preprocessor();
 		this.lexer = new Lexer();
 		this.parser = new Parser();
-		this.processor = new Processor();
+		this.olds = new Vector<>();
 	}
 }

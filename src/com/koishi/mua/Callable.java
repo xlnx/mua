@@ -4,7 +4,7 @@ import java.util.Vector;
 
 public interface Callable {
 	int getParamCount();
-	Value execute(Processor processor, Vector<Value> params, Context context) throws Exception;
+	Value execute(Vector<Value> params, Context context) throws Exception;
 }
 
 class Util {

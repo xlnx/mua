@@ -12,8 +12,8 @@ public class List extends Value implements Callable {
 		return value;
 	}
 
-	Value execute(Processor processor, Context context) throws Exception {
-		return processor.parse(value, context);
+	Value execute(Context context) throws Exception {
+		return Processor.parse(new Vector<>(value), context);
 	}
 
 	boolean isCallable() {
@@ -21,7 +21,7 @@ public class List extends Value implements Callable {
 	}
 
 	@Override
-	public Value execute(Processor processor, Vector<Value> params, Context context) throws Exception {
+	public Value execute(Vector<Value> params, Context context) throws Exception {
 		if (!isFunction) {
 			throw new Exception("expected a function, got " + this);
 		} else {
@@ -34,7 +34,12 @@ public class List extends Value implements Callable {
 				Util.putArg(this.params.get(i), params.get(i), inner);
 			}
 			List executable = value.get(1).as();
-			executable.execute(processor, inner);
+			try {
+				executable.execute(inner);
+			} catch	(Processor.FunctionStop stop) {
+				return inner.getResult();
+				//throw new Processor.FunctionStopWithReturnValue(inner.getResult());
+			}
 			return inner.getResult();
 		}
 	}

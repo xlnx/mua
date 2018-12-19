@@ -5,7 +5,7 @@ import java.util.*;
 public class Builtin {
 
 	private interface BuiltinFunctionBody {
-		Value execute(Processor processor, Context context) throws Exception;
+		Value execute(Context context) throws Exception;
 	}
 
 	private static class BuiltinFunction implements Callable {
@@ -19,15 +19,15 @@ public class Builtin {
 		}
 
 		@Override
-		public Value execute(Processor processor, Vector<Value> params, Context context) throws Exception {
+		public Value execute(Vector<Value> params, Context context) throws Exception {
 			if (params.size() != this.params) {
 				throw new Exception("internal error arg mismatch");
 			}
 			var inner = context.derive();
 			for (int i = 0; i != params.size(); ++i) {
-				Util.putArg("a" + i, params.get(i), inner);
+				inner.getArgs().add(params.get(i));
 			}
-			return body.execute(processor, inner);
+			return body.execute(inner);
 		}
 
 		BuiltinFunction(int params, BuiltinFunctionBody body) {
@@ -47,38 +47,38 @@ public class Builtin {
 		return functions.containsKey(name);
 	}
 
-	static Map<String, BuiltinFunction> functions;
+	private static Map<String, BuiltinFunction> functions;
 	static
 	{
 		functions = new HashMap<>();
 
-		functions.put("add", new BuiltinFunction(2, (Processor processor, Context context) -> {
-			return new Number(context.get("a0").asNumber().getValue() + context.get("a1").asNumber().getValue());
+		functions.put("add", new BuiltinFunction(2, (Context context) -> {
+			return new Number(context.getArgs().get(0).asNumber().getValue() + context.getArgs().get(1).asNumber().getValue());
 		}));
-		functions.put("sub", new BuiltinFunction(2, (Processor processor, Context context) -> {
-			return new Number(context.get("a0").asNumber().getValue() - context.get("a1").asNumber().getValue());
+		functions.put("sub", new BuiltinFunction(2, (Context context) -> {
+			return new Number(context.getArgs().get(0).asNumber().getValue() - context.getArgs().get(1).asNumber().getValue());
 		}));
-		functions.put("mul", new BuiltinFunction(2, (Processor processor, Context context) -> {
-			return new Number(context.get("a0").asNumber().getValue() * context.get("a1").asNumber().getValue());
+		functions.put("mul", new BuiltinFunction(2, (Context context) -> {
+			return new Number(context.getArgs().get(0).asNumber().getValue() * context.getArgs().get(1).asNumber().getValue());
 		}));
-		functions.put("div", new BuiltinFunction(2, (Processor processor, Context context) -> {
-			return new Number(context.get("a0").asNumber().getValue() / context.get("a1").asNumber().getValue());
+		functions.put("div", new BuiltinFunction(2, (Context context) -> {
+			return new Number(context.getArgs().get(0).asNumber().getValue() / context.getArgs().get(1).asNumber().getValue());
 		}));
-		functions.put("mod", new BuiltinFunction(2, (Processor processor, Context context) -> {
-			return new Number(context.get("a0").asNumber().getValue() % context.get("a1").asNumber().getValue());
+		functions.put("mod", new BuiltinFunction(2, (Context context) -> {
+			return new Number(context.getArgs().get(0).asNumber().getValue() % context.getArgs().get(1).asNumber().getValue());
 		}));
-		functions.put("and", new BuiltinFunction(2, (Processor processor, Context context) -> {
-			return new Bool(context.get("a0").asBool().getValue() && context.get("a1").asBool().getValue());
+		functions.put("and", new BuiltinFunction(2, (Context context) -> {
+			return new Bool(context.getArgs().get(0).asBool().getValue() && context.getArgs().get(1).asBool().getValue());
 		}));
-		functions.put("or", new BuiltinFunction(2, (Processor processor, Context context) -> {
-			return new Bool(context.get("a0").asBool().getValue() || context.get("a1").asBool().getValue());
+		functions.put("or", new BuiltinFunction(2, (Context context) -> {
+			return new Bool(context.getArgs().get(0).asBool().getValue() || context.getArgs().get(1).asBool().getValue());
 		}));
-		functions.put("not", new BuiltinFunction(1, (Processor processor, Context context) -> {
-			return new Bool(!context.get("a0").asBool().getValue());
+		functions.put("not", new BuiltinFunction(1, (Context context) -> {
+			return new Bool(!context.getArgs().get(0).asBool().getValue());
 		}));
-		functions.put("eq", new BuiltinFunction(2, (Processor processor, Context context) -> {
-			var a = context.get("a0");
-			var b = context.get("a1");
+		functions.put("eq", new BuiltinFunction(2, (Context context) -> {
+			var a = context.getArgs().get(0);
+			var b = context.getArgs().get(1);
 			if ((a instanceof Number) && (b instanceof Number)) {
 				return new Bool(a.asNumber().getValue() == b.asNumber().getValue());
 			} else if ((a instanceof Word) && (b instanceof Word)) {
@@ -87,9 +87,9 @@ public class Builtin {
 				throw new Exception("expected word or number");
 			}
 		}));
-		functions.put("lt", new BuiltinFunction(2, (Processor processor, Context context) -> {
-			var a = context.get("a0");
-			var b = context.get("a1");
+		functions.put("lt", new BuiltinFunction(2, (Context context) -> {
+			var a = context.getArgs().get(0);
+			var b = context.getArgs().get(1);
 			if ((a instanceof Number) && (b instanceof Number)) {
 				return new Bool(a.asNumber().getValue() < b.asNumber().getValue());
 			} else if ((a instanceof Word) && (b instanceof Word)) {
@@ -98,9 +98,9 @@ public class Builtin {
 				throw new Exception("expected word or number");
 			}
 		}));
-		functions.put("gt", new BuiltinFunction(2, (Processor processor, Context context) -> {
-			var a = context.get("a0");
-			var b = context.get("a1");
+		functions.put("gt", new BuiltinFunction(2, (Context context) -> {
+			var a = context.getArgs().get(0);
+			var b = context.getArgs().get(1);
 			if ((a instanceof Number) && (b instanceof Number)) {
 				return new Bool(a.asNumber().getValue() > b.asNumber().getValue());
 			} else if ((a instanceof Word) && (b instanceof Word)) {
@@ -110,26 +110,26 @@ public class Builtin {
 			}
 		}));
 
-		functions.put("make", new BuiltinFunction (2, (Processor processor, Context context) -> {
-			context.getParent().put(context.get("a0").asWord().getValue(), context.get("a1"));
+		functions.put("make", new BuiltinFunction (2, (Context context) -> {
+			context.getParent().put(context.getArgs().get(0).asWord().getValue(), context.getArgs().get(1));
 			return null;
 		}));
-		functions.put("print", new BuiltinFunction (1, (Processor processor, Context context) -> {
-			context.get("a0").print();
+		functions.put("print", new BuiltinFunction (1, (Context context) -> {
+			context.getArgs().get(0).print();
 			System.out.println();
 			return null;
 		}));
-		functions.put("isname", new BuiltinFunction (1, (Processor processor, Context context) -> {
-			return new Bool(context.getParent().containsKey(context.get("a0").asWord().getValue()));
+		functions.put("isname", new BuiltinFunction (1, (Context context) -> {
+			return new Bool(context.getParent().containsKey(context.getArgs().get(0).asWord().getValue()));
 		}));
-		functions.put("thing", new BuiltinFunction (1, (Processor processor, Context context) -> {
-			return context.getParent().get(context.get("a0").asWord().getValue());
+		functions.put("thing", new BuiltinFunction (1, (Context context) -> {
+			return context.getParent().get(context.getArgs().get(0).asWord().getValue());
 		}));
-		functions.put("erase", new BuiltinFunction (1, (Processor processor, Context context) -> {
-			context.getParent().erase(context.get("a0").asWord().getValue());
+		functions.put("erase", new BuiltinFunction (1, (Context context) -> {
+			context.getParent().erase(context.getArgs().get(0).asWord().getValue());
 			return null;
 		}));
-		functions.put("read", new BuiltinFunction (0, (Processor processor, Context context) -> {
+		functions.put("read", new BuiltinFunction (0, (Context context) -> {
 			var scanner = new Scanner(System.in);
 			var lexer = new Lexer();
 			var word = lexer.parse(scanner.next()).get(0);
@@ -144,32 +144,44 @@ public class Builtin {
 					throw new Exception("read function definitions from standard input is not supported");
 			}
 		}));
-		functions.put("readlist", new BuiltinFunction (0, (Processor processor, Context context) -> {
+		functions.put("readlist", new BuiltinFunction (0, (Context context) -> {
 			System.out.println("readlist");
 			return null;
 		}));
 
-		functions.put("repeat", new BuiltinFunction(2, (Processor processor, Context context) -> {
-			var executable = context.get("a1").asList();
-			for (int i = 0; i != context.get("a0").asNumber().getValue(); ++i) {
-				executable.execute(processor, context);
+		functions.put("repeat", new BuiltinFunction(2, (Context context) -> {
+			var executable = context.getArgs().get(1).asList();
+			for (int i = 0; i != context.getArgs().get(0).asNumber().getValue(); ++i) {
+				executable.execute(context);
 			}
 			return null;
 		}));
-		functions.put("isnumber", new BuiltinFunction (1, (Processor processor, Context context) -> {
-			return new Bool(context.get("a0") instanceof Number);
+		functions.put("output", new BuiltinFunction(1, (Context context) -> {
+			context.setResult(context.getArgs().get(0));
+			return null;
 		}));
-		functions.put("isword", new BuiltinFunction (1, (Processor processor, Context context) -> {
-			return new Bool(context.get("a0") instanceof Word);
+		functions.put("stop", new BuiltinFunction(0, (Context context) -> {
+			Processor.stop();
+			return null;
 		}));
-		functions.put("islist", new BuiltinFunction (1, (Processor processor, Context context) -> {
-			return new Bool(context.get("a0") instanceof List);
+		functions.put("export", new BuiltinFunction(0, (Context context) -> {
+			context.export();
+			return null;
 		}));
-		functions.put("isbool", new BuiltinFunction (1, (Processor processor, Context context) -> {
-			return new Bool(context.get("a0") instanceof Bool);
+		functions.put("isnumber", new BuiltinFunction (1, (Context context) -> {
+			return new Bool(context.getArgs().get(0) instanceof Number);
 		}));
-		functions.put("isempty", new BuiltinFunction (1, (Processor processor, Context context) -> {
-			var a = context.get("a0");
+		functions.put("isword", new BuiltinFunction (1, (Context context) -> {
+			return new Bool(context.getArgs().get(0) instanceof Word);
+		}));
+		functions.put("islist", new BuiltinFunction (1, (Context context) -> {
+			return new Bool(context.getArgs().get(0) instanceof List);
+		}));
+		functions.put("isbool", new BuiltinFunction (1, (Context context) -> {
+			return new Bool(context.getArgs().get(0) instanceof Bool);
+		}));
+		functions.put("isempty", new BuiltinFunction (1, (Context context) -> {
+			var a = context.getArgs().get(0);
 			if (a instanceof List) {
 				return new Bool(a.asList().getValue().isEmpty());
 			} else if (a instanceof Word) {
@@ -179,19 +191,19 @@ public class Builtin {
 			}
 		}));
 
-		functions.put("random", new BuiltinFunction(1, (Processor processor, Context context) -> {
-			return new Number(Math.random() * context.get("a0").asNumber().getValue());
+		functions.put("random", new BuiltinFunction(1, (Context context) -> {
+			return new Number(Math.random() * context.getArgs().get(0).asNumber().getValue());
 		}));
-		functions.put("sqrt", new BuiltinFunction(1, (Processor processor, Context context) -> {
-			return new Number(Math.sqrt(context.get("a0").asNumber().getValue()));
+		functions.put("sqrt", new BuiltinFunction(1, (Context context) -> {
+			return new Number(Math.sqrt(context.getArgs().get(0).asNumber().getValue()));
 		}));
-		functions.put("int", new BuiltinFunction(1, (Processor processor, Context context) -> {
-			return new Number(Math.floor(context.get("a0").asNumber().getValue()));
+		functions.put("int", new BuiltinFunction(1, (Context context) -> {
+			return new Number(Math.floor(context.getArgs().get(0).asNumber().getValue()));
 		}));
 
-		functions.put("word", new BuiltinFunction(2, (Processor processor, Context context) -> {
-			var a = context.get("a0").asWord().getValue();
-			var b = context.get("a1");
+		functions.put("word", new BuiltinFunction(2, (Context context) -> {
+			var a = context.getArgs().get(0).asWord().getValue();
+			var b = context.getArgs().get(1);
 			if (b instanceof Number) {
 				a += b.asNumber().getValue();
 			} else if (b instanceof Bool) {
@@ -203,19 +215,19 @@ public class Builtin {
 			}
 			return new Word(Word.Type.word, a);
 		}));
-		functions.put("if", new BuiltinFunction(3, (Processor processor, Context context) -> {
-			var cond = context.get("a0").asBool().getValue();
+		functions.put("if", new BuiltinFunction(3, (Context context) -> {
+			var cond = context.getArgs().get(0).asBool().getValue();
 			if (cond) {
-				context.get("a1").asList().execute(processor, context);
+				context.getArgs().get(1).asList().execute(context);
 			} else {
-				context.get("a2").asList().execute(processor, context);
+				context.getArgs().get(2).asList().execute(context);
 			}
 			return null;
 		}));
-		functions.put("sentence", new BuiltinFunction(2, (Processor processor, Context context) -> {
+		functions.put("sentence", new BuiltinFunction(2, (Context context) -> {
 			var l = new Vector<Value>();
-			var a0 = context.get("a0");
-			var a1 = context.get("a1");
+			var a0 = context.getArgs().get(0);
+			var a1 = context.getArgs().get(1);
 			if (a0 instanceof List) {
 				l.addAll(a0.asList().getValue());
 			} else {
@@ -228,20 +240,20 @@ public class Builtin {
 			}
 			return new List(l);			// buggy maybe
 		}));
-		functions.put("list", new BuiltinFunction(2, (Processor processor, Context context) -> {
+		functions.put("list", new BuiltinFunction(2, (Context context) -> {
 			var l = new Vector<Value>();
-			l.add(context.get("a0"));
-			l.add(context.get("a1"));
+			l.add(context.getArgs().get(0));
+			l.add(context.getArgs().get(1));
 			return new List(l);			// buggy maybe
 		}));
-		functions.put("join", new BuiltinFunction(2, (Processor processor, Context context) -> {
+		functions.put("join", new BuiltinFunction(2, (Context context) -> {
 			var l = new Vector<Value>();
-			l.addAll(context.get("a0").asList().getValue());
-			l.add(context.get("a1"));
+			l.addAll(context.getArgs().get(0).asList().getValue());
+			l.add(context.getArgs().get(1));
 			return new List(l);			// buggy maybe
 		}));
-		functions.put("first", new BuiltinFunction(1, (Processor processor, Context context) -> {
-			var a = context.get("a0");
+		functions.put("first", new BuiltinFunction(1, (Context context) -> {
+			var a = context.getArgs().get(0);
 			if (a instanceof List) {
 				var value = a.asList().getValue();
 				if (value.isEmpty()) {
@@ -260,8 +272,8 @@ public class Builtin {
 				throw new Exception("expected word or list");
 			}
 		}));
-		functions.put("last", new BuiltinFunction(1, (Processor processor, Context context) -> {
-			var a = context.get("a0");
+		functions.put("last", new BuiltinFunction(1, (Context context) -> {
+			var a = context.getArgs().get(0);
 			if (a instanceof List) {
 				var value = a.asList().getValue();
 				if (value.isEmpty()) {
@@ -280,8 +292,8 @@ public class Builtin {
 				throw new Exception("expected word or list");
 			}
 		}));
-		functions.put("butfirst", new BuiltinFunction(1, (Processor processor, Context context) -> {
-			var a = context.get("a0");
+		functions.put("butfirst", new BuiltinFunction(1, (Context context) -> {
+			var a = context.getArgs().get(0);
 			if (a instanceof List) {
 				var value = a.asList().getValue();
 				if (value.isEmpty()) {
@@ -304,8 +316,8 @@ public class Builtin {
 				throw new Exception("expected word or list");
 			}
 		}));
-		functions.put("butlast", new BuiltinFunction(1, (Processor processor, Context context) -> {
-			var a = context.get("a0");
+		functions.put("butlast", new BuiltinFunction(1, (Context context) -> {
+			var a = context.getArgs().get(0);
 			if (a instanceof List) {
 				var value = a.asList().getValue();
 				if (value.isEmpty()) {
@@ -329,25 +341,25 @@ public class Builtin {
 			}
 		}));
 
-		functions.put("wait", new BuiltinFunction(1, (Processor processor, Context context) -> {
+		functions.put("wait", new BuiltinFunction(1, (Context context) -> {
 			try {
-				Thread.sleep((int) context.get("a0").asNumber().getValue());
+				Thread.sleep((int) context.getArgs().get(0).asNumber().getValue());
 			} catch (InterruptedException e) {
 				; // do nothing
 			}
 			return null;
 		}));
-		functions.put("save", new BuiltinFunction(1, (Processor processor, Context context) -> {
+		functions.put("save", new BuiltinFunction(1, (Context context) -> {
 			throw new Exception("save function not implemented");
 		}));
-		functions.put("load", new BuiltinFunction(1, (Processor processor, Context context) -> {
+		functions.put("load", new BuiltinFunction(1, (Context context) -> {
 			throw new Exception("load function not implemented");
 		}));
-		functions.put("erall", new BuiltinFunction(0, (Processor processor, Context context) -> {
+		functions.put("erall", new BuiltinFunction(0, (Context context) -> {
 			context.getParent().clear();
 			return null;
 		}));
-		functions.put("poall", new BuiltinFunction(0, (Processor processor, Context context) -> {
+		functions.put("poall", new BuiltinFunction(0, (Context context) -> {
 			context.getParent().list();
 			return null;
 		}));
