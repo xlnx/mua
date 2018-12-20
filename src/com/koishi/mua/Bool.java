@@ -1,11 +1,16 @@
 package com.koishi.mua;
 
-public class Bool extends Value {
+class Bool extends Value {
 
-	private boolean value;
+	private final boolean value;
 
 	boolean getValue() {
 		return value;
+	}
+
+	@Override
+	public String toString() {
+		return "bool<" + value + ">";
 	}
 
 	@Override

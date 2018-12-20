@@ -1,58 +1,60 @@
 package com.koishi.mua;
 
-import java.util.Vector;
+import java.util.ArrayList;
 
-public class Parser {
+class Parser {
 
 	private interface EOFHandler {
 		void apply() throws Exception;
 	}
 
-	public static class EOFException extends Exception {
-		EOFException(String what) {
-			super(what);
-		}
-	}
+	private ArrayList<Word> oldWords;
 
-	private Vector<Word> oldWords;
-
-	private Vector<Value> parseRecursively(Vector<Word> words, EOFHandler handler) throws Exception {
-		var values = new Vector<Value>();
+	private ArrayList<Value> parseRecursively(ArrayList<Word> words, EOFHandler handler) throws Exception {
+		var values = new ArrayList<Value>();
 		while (!words.isEmpty()) {
-			var word = words.remove(0);
+			var word = words.get(0);
 			if (word.is(Word.Type.bracket)) {
 				if (word.is(Word.Type.lbracket)) {
+					words.remove(0);
 					values.add(new List(parseRecursively(words, () -> {
 						throw new EOFException("expected ']' before end of file");
 					})));
+					if (!words.remove(0).is(Word.Type.rbracket)) {
+						throw new InternalException();
+					}
 				} else {
 					return values;
 				}
 			} else {
 				values.add(word);
+				words.remove(0);
 			}
 		}
 		handler.apply();
 		return values;
 	}
 
-	Vector<Value> parse(Vector<Word> words) throws Exception {
+	ArrayList<Value> parse(ArrayList<Word> words) throws Exception {
 		this.oldWords.addAll(words);
-		var old = new Vector<>(this.oldWords);
+		var old = new ArrayList<>(this.oldWords);
 		try {
 			var result = parseRecursively(this.oldWords, () -> {});
-			this.oldWords = new Vector<>();
+			if (!this.oldWords.isEmpty()) {
+				throw new UnexpectedRightBracketException();
+			}
+			this.oldWords.clear();
 			return result;
 		} catch (EOFException e) {
 			this.oldWords = old;
 			throw e;
 		} catch (Exception e) {
-			this.oldWords = new Vector<>();
+			this.oldWords.clear();
 			throw e;
 		}
 	}
 
 	Parser() {
-		this.oldWords = new Vector<>();
+		this.oldWords = new ArrayList<>();
 	}
 }

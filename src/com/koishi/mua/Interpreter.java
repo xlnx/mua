@@ -1,35 +1,42 @@
 package com.koishi.mua;
 
-import java.util.Vector;
+import java.util.ArrayList;
 
-public class Interpreter {
+class Interpreter {
 
-	private Context context;
-	private Preprocessor preprocessor;
-	private Lexer lexer;
-	private Parser parser;
-	private Vector<Value> olds;
+	private final Context context;
+	private final Preprocessor preprocessor;
+	private final Lexer lexer;
+	private final Parser parser;
+	private final Facility facility;
+	private ArrayList<Word> olds;
 
-	public Value interpret(String src) throws Exception {
-		var toks = new Vector<Value>(olds);
-		toks.addAll(parser.parse(lexer.parse(preprocessor.parse(src))));
-		var executable = new List(toks);
+	Value interpret(String src) throws Exception {
+		var words = new ArrayList<>(olds);
+		words.addAll(lexer.parse(preprocessor.parse(src)));
+		var executable = new List(parser.parse(words));
+		facility.astBuilder.reset();
 		try {
-			var res = executable.execute(context);
+			var res = executable.execute(facility, context);
 			olds.clear();
 			return res;
-		} catch (Parser.EOFException e) {
-			olds.addAll(toks);
+		} catch (EOFException e) {
+			olds = words;
+			throw e;
+		} catch (Exception e) {
+			facility.astBuilder.top().root().print(facility);
+			olds.clear();
 			throw e;
 		}
 	}
 
-	public Interpreter() {
+	Interpreter() {
 		this.context = new Context();
+		Builtin.dump(context);
 		this.context.put("pi", new Number(3.14159));
-		var list = new Vector<Value>();
-		var args = new Vector<Value>();
-		var body = new Vector<Value>();
+		var list = new ArrayList<Value>();
+		var args = new ArrayList<Value>();
+		var body = new ArrayList<Value>();
 		args.add(new Word(Word.Type.word, "a0"));
 		body.add(new Word(Word.Type.word, "repeat"));
 		body.add(new Word(Word.Type.number, "1"));
@@ -40,6 +47,7 @@ public class Interpreter {
 		this.preprocessor = new Preprocessor();
 		this.lexer = new Lexer();
 		this.parser = new Parser();
-		this.olds = new Vector<>();
+		this.olds = new ArrayList<>();
+		this.facility = new Facility();
 	}
 }

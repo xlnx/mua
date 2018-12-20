@@ -1,10 +1,9 @@
 package com.koishi.mua;
 
-import java.util.Vector;
-import java.util.regex.Matcher;
+import java.util.ArrayList;
 import java.util.regex.Pattern;
 
-public class Lexer {
+class Lexer {
 
 	private static class WordDesc {
 		Word.Type type;
@@ -16,9 +15,9 @@ public class Lexer {
 		}
 	}
 
-	Vector<Word> parse(String src) {
-		var words = new Vector<Word>();
-		boolean flag = false;
+	ArrayList<Word> parse(String src) {
+		var words = new ArrayList<Word>();
+		boolean flag;
 		do {
 			flag = false;
 			for (var wordDesc : Lexer.wordDescs) {
@@ -37,14 +36,15 @@ public class Lexer {
 		return words;
 	}
 
-	private static Vector<WordDesc> wordDescs;
+	private static ArrayList<WordDesc> wordDescs;
 	static
 	{
-		wordDescs = new Vector<>();
+		wordDescs = new ArrayList<>();
 
 		wordDescs.add(new WordDesc(Word.Type.wordLiteral, "\"[^\\s]+"));
 		wordDescs.add(new WordDesc(Word.Type.wordValue, ":[^\\s]+"));
-		wordDescs.add(new WordDesc(Word.Type.number, "-?\\s*[0-9]+(?:\\.[0-9]+)?\\b"));
+		wordDescs.add(new WordDesc(Word.Type.number, "-?[0-9]+(?:\\.[0-9]+)?\\b"));
+		wordDescs.add(new WordDesc(Word.Type.bool, "true|false"));
 		wordDescs.add(new WordDesc(Word.Type.lbracket, "\\["));
 		wordDescs.add(new WordDesc(Word.Type.rbracket, "\\]"));
 		wordDescs.add(new WordDesc(Word.Type.word, "[^\\s]+"));

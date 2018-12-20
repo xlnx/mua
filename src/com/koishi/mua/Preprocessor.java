@@ -1,6 +1,6 @@
 package com.koishi.mua;
 
-public class Preprocessor {
+class Preprocessor {
 	String parse(String src) {
 		var lines = src.split("\n");
 		for (int i = 0; i != lines.length; ++i) {

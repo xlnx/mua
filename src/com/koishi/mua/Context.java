@@ -1,53 +1,35 @@
 package com.koishi.mua;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Vector;
+import java.util.ArrayList;
 
-public class Context {
+class Context {
 
-	private Context parent;
-	private Map<String, Value> context;
-	private Vector<Value> args;
+	private final Context global;
+	private final Context parent;
+	private final Map<String, Value> context;
+	private final boolean accept;
 	private Value result;
-	private boolean accept;
 
-	Context derive() {
-		var derived = new Context();
-		derived.parent = this;
-		derived.context = new HashMap<>(context);
-		return derived;
-	}
-	Context copy() throws Exception {
-		if (parent != null) {
-			throw new Exception("internel error cloning non-global context");
-		} else {
-			var copied = new Context();
-			copied.context = new HashMap<>(context);
-			return copied;
+	void export() throws Exception {
+		if (global == this) {
+			throw new GlobalNamespaceException("export");
 		}
+		global.context.putAll(this.context);
 	}
-	Context getParent() {
-		return parent;
-	}
-	void assign(Context other) throws Exception {
-		if (parent != null) {
-			throw new Exception("internel error cloning non-global context");
-		} else {
-			context = other.context;
-		}
-	}
-	void export() {
-		var namesp = this;
-		while (namesp.parent != null) {
-			namesp = namesp.parent;
-		}
-		namesp.context = new HashMap<>(this.context);
+
+	boolean containsKey(String key) {
+		return context.containsKey(key);
 	}
 
 	Value get(String key) throws Exception {
 		if (!context.containsKey(key)) {
-			throw new Exception("no such key named: " + key);
+			if (!global.context.containsKey(key)) {
+				throw new Exception("no such key named: " + key);
+			} else {
+				return global.context.get(key);
+			}
 		} else {
 			return context.get(key);
 		}
@@ -57,32 +39,16 @@ public class Context {
 		context.put(key, value);
 	}
 
-	boolean containsKey(String key) {
-		return context.containsKey(key);
-	}
-
 	void erase(String key) {
-		context.remove(key);
+		if (context.containsKey(key)) {
+			context.remove(key);
+		} else {
+			global.context.remove(key);
+		}
 	}
 
 	Value getResult() {
 		return result;
-	}
-
-	void setResult(Value result) throws Exception {
-		if (!accept) {
-			if (parent != null) {
-				parent.setResult(result);
-			} else {
-				throw new Exception("output value outside function is not allowed");
-			}
-		} else {
-			this.result = result;
-		}
-	}
-
-	void acceptResult() {
-		this.accept = true;
 	}
 
 	void clear() {
@@ -99,16 +65,31 @@ public class Context {
 		System.out.println("}");
 	}
 
-	Vector<Value> getArgs()
-	{
-		return args;
+	void setResult(Value result) throws Exception {
+		if (!accept) {
+			if (parent != null) {
+				parent.setResult(result);
+			} else {
+				throw new GlobalNamespaceException("output");
+			}
+		} else {
+			this.result = result;
+		}
 	}
 
 	Context() {
 		this.accept = false;
 		this.result = null;
+		this.global = this;
 		this.parent = null;
-		this.context = new HashMap<>();
-		this.args = new Vector<>();
+		this.context = new LinkedHashMap<>();
+	}
+
+	Context(Context other, boolean acceptResult) {
+		this.accept = acceptResult;
+		this.result = null;
+		this.global = other.global;
+		this.parent = other;
+		this.context = new LinkedHashMap<>();
 	}
 }

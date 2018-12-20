@@ -1,19 +1,19 @@
 package com.koishi.mua;
 
-import java.util.Vector;
+import java.util.ArrayList;
 
-public class List extends Value implements Callable {
+class List extends Value implements Callable {
 
-	private boolean isFunction;
-	private Vector<String> params;
-	private final Vector<Value> value;
+	private final boolean isFunction;
+	private final ArrayList<String> params;
+	private final ArrayList<Value> value;
 
-	Vector<Value> getValue() {
+	ArrayList<Value> getValue() {
 		return value;
 	}
 
-	Value execute(Context context) throws Exception {
-		return Processor.parse(new Vector<>(value), context);
+	Value execute(Facility facility, Context context) throws Exception {
+		return facility.processor.parse(facility, new ArrayList<>(value), context);
 	}
 
 	boolean isCallable() {
@@ -21,25 +21,29 @@ public class List extends Value implements Callable {
 	}
 
 	@Override
-	public Value execute(Vector<Value> params, Context context) throws Exception {
+	public Value execute(Facility facility, ArrayList<Value> params, Context context) throws Exception {
 		if (!isFunction) {
-			throw new Exception("expected a function, got " + this);
+			throw new InternalException();
 		} else {
+
+			facility.astBuilder.push(new Tree("function"));		// enter builder
+
 			if (params.size() != this.params.size()) {
-				throw new Exception("internal error args mismatch");
+				throw new InternalException();
 			}
-			var inner = context.derive();
-			inner.acceptResult();
+			var inner = new Context(context, true);
 			for (int i = 0; i != params.size(); ++i) {
 				Util.putArg(this.params.get(i), params.get(i), inner);
 			}
 			List executable = value.get(1).as();
 			try {
-				executable.execute(inner);
-			} catch	(Processor.FunctionStop stop) {
-				return inner.getResult();
-				//throw new Processor.FunctionStopWithReturnValue(inner.getResult());
+				executable.execute(facility, inner);
+			} catch	(FunctionStop stop) {
+				// do nothing
 			}
+
+			facility.astBuilder.pop();					// leave builder
+
 			return inner.getResult();
 		}
 	}
@@ -47,6 +51,11 @@ public class List extends Value implements Callable {
 	@Override
 	public int getParamCount() {
 		return params.size();
+	}
+
+	@Override
+	public String toString() {
+		return "list<x" + value.size() + ">";
 	}
 
 	@Override
@@ -59,9 +68,9 @@ public class List extends Value implements Callable {
 		System.out.print(" ]");
 	}
 
-	List(Vector<Value> value) {
-		isFunction = true;
-		this.params = new Vector<>();
+	List(ArrayList<Value> value) {
+		boolean isFunction = true;
+		var args = new ArrayList<String>();
 		if (value.size() != 2) {
 			isFunction = false;
 		} else {
@@ -77,7 +86,7 @@ public class List extends Value implements Callable {
 							isFunction = false;
 							break;
 						} else {
-							this.params.add(word.getValue());
+							args.add(word.getValue());
 						}
 					}
 				}
@@ -86,7 +95,10 @@ public class List extends Value implements Callable {
 			}
 		}
 		this.value = value;
-		if (!isFunction) {
+		this.isFunction = isFunction;
+		if (isFunction) {
+			this.params = args;
+		} else {
 			this.params = null;
 		}
 	}

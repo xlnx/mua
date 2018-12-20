@@ -1,40 +1,40 @@
 package com.koishi.mua;
 
-public abstract class Value {
+abstract class Value {
 
 	<T extends Value> T as() {
 		return (T) this;
 	}
 
-	Word asWord() throws Exception {
+	Word asWord(Facility facility, int index) throws Exception {
 		if (this instanceof Word) {
 			return as();
 		} else {
-			throw new Exception("expected word, got " + this);
+			throw new ExpectedException(facility, index, "word", this);
 		}
 	}
 
-	Number asNumber() throws Exception {
+	Number asNumber(Facility facility, int index) throws Exception {
 		if (this instanceof Number) {
 			return as();
 		} else {
-			throw new Exception("expected number, got " + this);
+			throw new ExpectedException(facility, index, "number", this);
 		}
 	}
 
-	List asList() throws Exception {
+	List asList(Facility facility, int index) throws Exception {
 		if (this instanceof List) {
 			return as();
 		} else {
-			throw new Exception("expected list, got " + this);
+			throw new ExpectedException(facility, index, "list", this);
 		}
 	}
 
-	Bool asBool() throws Exception {
+	Bool asBool(Facility facility, int index) throws Exception {
 		if (this instanceof Bool) {
 			return as();
 		} else {
-			throw new Exception("expected bool, got " + this);
+			throw new ExpectedException(facility, index, "bool", this);
 		}
 	}
 
