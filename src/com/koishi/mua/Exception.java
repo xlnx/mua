@@ -43,7 +43,10 @@ class UnexpectedRightBracketException extends Exception {
 }
 
 class EmptyException extends Exception {
-	EmptyException(String list) { super("can't open empty "); }
+	EmptyException(Facility facility, int index, String list) {
+		super("can't open empty " + list);
+		facility.astBuilder.push(facility.astBuilder.top().children.get(index));
+	}
 }
 
 class NullArgException extends Exception {

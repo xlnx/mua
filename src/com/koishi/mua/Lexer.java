@@ -41,8 +41,8 @@ class Lexer {
 	{
 		wordDescs = new ArrayList<>();
 
-		wordDescs.add(new WordDesc(Word.Type.wordLiteral, "\"[^\\s]+"));
-		wordDescs.add(new WordDesc(Word.Type.wordValue, ":[^\\s]+"));
+		wordDescs.add(new WordDesc(Word.Type.wordLiteral, "\"[^\\s]*"));
+		wordDescs.add(new WordDesc(Word.Type.wordValue, ":[^\\s]*"));
 		wordDescs.add(new WordDesc(Word.Type.number, "-?[0-9]+(?:\\.[0-9]+)?\\b"));
 		wordDescs.add(new WordDesc(Word.Type.bool, "true|false"));
 		wordDescs.add(new WordDesc(Word.Type.lbracket, "\\["));

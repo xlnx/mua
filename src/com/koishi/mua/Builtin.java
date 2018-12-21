@@ -293,14 +293,14 @@ class Builtin {
 			if (a instanceof List) {
 				var value = a.asList(facility, 0).getValue();
 				if (value.isEmpty()) {
-					throw new EmptyException("list");
+					throw new EmptyException(facility, 0, "list");
 				} else {
 					return value.get(0);
 				}
 			} else if (a instanceof Word) {
 				var value = a.asWord(facility, 0).getValue();
 				if (value.equals("")) {
-					throw new EmptyException("word");
+					throw new EmptyException(facility, 0, "word");
 				} else {
 					return new Word(Word.Type.word, value.substring(0, 1));
 				}
@@ -313,14 +313,14 @@ class Builtin {
 			if (a instanceof List) {
 				var value = a.asList(facility, 0).getValue();
 				if (value.isEmpty()) {
-					throw new EmptyException("list");
+					throw new EmptyException(facility, 0, "list");
 				} else {
 					return value.get(value.size() - 1);
 				}
 			} else if (a instanceof Word) {
 				var value = a.asWord(facility, 0).getValue();
 				if (value.equals("")) {
-					throw new EmptyException("word");
+					throw new EmptyException(facility, 0, "word");
 				} else {
 					return new Word(Word.Type.word, value.substring(value.length() - 1));
 				}
@@ -333,7 +333,7 @@ class Builtin {
 			if (a instanceof List) {
 				var value = a.asList(facility, 0).getValue();
 				if (value.isEmpty()) {
-					throw new EmptyException("list");
+					throw new EmptyException(facility, 0, "list");
 				} else {
 					var list = new ArrayList<Value>();
 					for (var i = 1; i < value.size(); ++i) {
@@ -344,7 +344,7 @@ class Builtin {
 			} else if (a instanceof Word) {
 				var value = a.asWord(facility, 0).getValue();
 				if (value.equals("")) {
-					throw new EmptyException("word");
+					throw new EmptyException(facility, 0, "word");
 				} else {
 					return new Word(Word.Type.word, value.substring(1));
 				}
@@ -357,7 +357,7 @@ class Builtin {
 			if (a instanceof List) {
 				var value = a.asList(facility, 0).getValue();
 				if (value.isEmpty()) {
-					throw new EmptyException("list");
+					throw new EmptyException(facility, 0, "list");
 				} else {
 					var list = new ArrayList<Value>();
 					for (var i = 0; i < value.size() - 1; ++i) {
@@ -368,7 +368,7 @@ class Builtin {
 			} else if (a instanceof Word) {
 				var value = a.asWord(facility, 0).getValue();
 				if (value.equals("")) {
-					throw new EmptyException("word");
+					throw new EmptyException(facility, 0, "word");
 				} else {
 					return new Word(Word.Type.word, value.substring(0, value.length() - 1));
 				}
