@@ -26,20 +26,25 @@ class List extends Value implements Callable {
 			throw new InternalException();
 		} else {
 
-			facility.astBuilder.push(new Tree("function"));		// enter builder
-
 			if (params.size() != this.params.size()) {
 				throw new InternalException();
 			}
 			var inner = new Context(context, true);
 			for (int i = 0; i != params.size(); ++i) {
+				facility.astBuilder.push(facility.astBuilder.top().children.get(i));
 				Util.putArg(this.params.get(i), params.get(i), inner);
+				facility.astBuilder.pop();
 			}
+
+			facility.astBuilder.push(new Tree("function"));		// enter builder
+
 			List executable = value.get(1).as();
 			try {
 				executable.execute(facility, inner);
 			} catch	(FunctionStop stop) {
 				// do nothing
+			} catch (EOFException e) {
+				throw new Exception(e.getMessage());
 			}
 
 			facility.astBuilder.pop();					// leave builder

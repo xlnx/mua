@@ -8,8 +8,6 @@ class Parser {
 		void apply() throws Exception;
 	}
 
-	private ArrayList<Word> oldWords;
-
 	private ArrayList<Value> parseRecursively(ArrayList<Word> words, EOFHandler handler) throws Exception {
 		var values = new ArrayList<Value>();
 		while (!words.isEmpty()) {
@@ -36,25 +34,11 @@ class Parser {
 	}
 
 	ArrayList<Value> parse(ArrayList<Word> words) throws Exception {
-		this.oldWords.addAll(words);
-		var old = new ArrayList<>(this.oldWords);
-		try {
-			var result = parseRecursively(this.oldWords, () -> {});
-			if (!this.oldWords.isEmpty()) {
-				throw new UnexpectedRightBracketException();
-			}
-			this.oldWords.clear();
-			return result;
-		} catch (EOFException e) {
-			this.oldWords = old;
-			throw e;
-		} catch (Exception e) {
-			this.oldWords.clear();
-			throw e;
+		var newWords = new ArrayList<>(words);
+		var result = parseRecursively(newWords, () -> {});
+		if (!newWords.isEmpty()) {
+			throw new UnexpectedRightBracketException();
 		}
-	}
-
-	Parser() {
-		this.oldWords = new ArrayList<>();
+		return result;
 	}
 }

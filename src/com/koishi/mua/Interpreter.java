@@ -14,9 +14,9 @@ class Interpreter {
 	Value interpret(String src) throws Exception {
 		var words = new ArrayList<>(olds);
 		words.addAll(lexer.parse(preprocessor.parse(src)));
-		var executable = new List(parser.parse(words));
-		facility.astBuilder.reset();
 		try {
+			var executable = new List(parser.parse(words));
+			facility.astBuilder.reset();
 			var res = executable.execute(facility, context);
 			olds.clear();
 			return res;

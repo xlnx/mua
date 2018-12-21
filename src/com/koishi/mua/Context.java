@@ -52,15 +52,19 @@ class Context {
 	}
 
 	void clear() {
-		this.context.clear();
+		context.values().removeIf((Value value) -> {
+			return !(value instanceof BuiltinFunction);
+		});
 	}
 
 	void list() {
 		System.out.println("{");
 		for (var entry: context.entrySet()) {
-			System.out.print("  " + entry.getKey() + ": ");
-			entry.getValue().print();
-			System.out.println();
+			if (!(entry.getValue() instanceof BuiltinFunction)) {
+				System.out.print("  " + entry.getKey() + ": ");
+				entry.getValue().print();
+				System.out.println();
+			}
 		}
 		System.out.println("}");
 	}
