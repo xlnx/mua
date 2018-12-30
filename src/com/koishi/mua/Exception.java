@@ -42,6 +42,20 @@ class UnexpectedRightBracketException extends Exception {
 	}
 }
 
+class DivideByZeroException extends Exception {
+	DivideByZeroException(Facility facility, int index) {
+		super("divide by zero");
+		facility.astBuilder.push(facility.astBuilder.top().children.get(index));
+	}
+}
+
+class SqrtNegativeException extends Exception {
+	SqrtNegativeException(Facility facility, int index, double value) {
+		super("sqrt negative number " + value);
+		facility.astBuilder.push(facility.astBuilder.top().children.get(index));
+	}
+}
+
 class EmptyException extends Exception {
 	EmptyException(Facility facility, int index, String list) {
 		super("can't open empty " + list);

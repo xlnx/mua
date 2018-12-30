@@ -39,14 +39,14 @@ class Lexer {
 	private static ArrayList<WordDesc> wordDescs;
 	static
 	{
+		var word_r = "[^\\s]+";
+
 		wordDescs = new ArrayList<>();
 
-		wordDescs.add(new WordDesc(Word.Type.wordLiteral, "\"[^\\s]*"));
-		wordDescs.add(new WordDesc(Word.Type.wordValue, ":[^\\s]*"));
-		wordDescs.add(new WordDesc(Word.Type.number, "-?[0-9]+(?:\\.[0-9]+)?\\b"));
-		wordDescs.add(new WordDesc(Word.Type.bool, "true|false"));
-		wordDescs.add(new WordDesc(Word.Type.lbracket, "\\["));
-		wordDescs.add(new WordDesc(Word.Type.rbracket, "\\]"));
-		wordDescs.add(new WordDesc(Word.Type.word, "[^\\s]+"));
+		wordDescs.add(new WordDesc(Word.Type.literal, "\"" + word_r));
+		wordDescs.add(new WordDesc(Word.Type.value, ":" + word_r));
+		wordDescs.add(new WordDesc(Word.Type.left, "\\["));
+		wordDescs.add(new WordDesc(Word.Type.right, "\\]"));
+		wordDescs.add(new WordDesc(Word.Type.word, word_r));
 	}
 }

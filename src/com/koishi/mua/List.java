@@ -38,7 +38,7 @@ class List extends Value implements Callable {
 
 			facility.astBuilder.push(new Tree("function"));		// enter builder
 
-			List executable = value.get(1).as();
+			List executable = (List)value.get(1);
 			try {
 				executable.execute(facility, inner);
 			} catch	(FunctionStop stop) {
@@ -80,13 +80,13 @@ class List extends Value implements Callable {
 			isFunction = false;
 		} else {
 			if ((value.get(0) instanceof List) && (value.get(1) instanceof List)) {
-				List params = value.get(0).as();
+				List params = (List) value.get(0);
 				for (var param: params.getValue()) {
 					if (param instanceof List) {
 						isFunction = false;
 						break;
 					} else {
-						Word word = param.as();
+						Word word = (Word) param;
 						if (!word.is(Word.Type.word)) {
 							isFunction = false;
 							break;

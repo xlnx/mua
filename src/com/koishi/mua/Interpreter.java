@@ -14,9 +14,18 @@ class Interpreter {
 	Value interpret(String src) throws Exception {
 		var words = new ArrayList<>(olds);
 		words.addAll(lexer.parse(preprocessor.parse(src)));
+		facility.astBuilder.reset();
+		List executable;
 		try {
-			var executable = new List(parser.parse(words));
-			facility.astBuilder.reset();
+			executable = new List(parser.parse(words));
+		} catch (EOFException e) {
+			olds = words;
+			throw e;
+		} catch (Exception e) {
+			olds.clear();
+			throw e;
+		}
+		try {
 			var res = executable.execute(facility, context);
 			olds.clear();
 			return res;
@@ -33,14 +42,14 @@ class Interpreter {
 	Interpreter() {
 		this.context = new Context();
 		Builtin.dump(context);
-		this.context.put("pi", new Number(3.14159));
+		this.context.put("pi", new Word(3.14159));
 		var list = new ArrayList<Value>();
 		var args = new ArrayList<Value>();
 		var body = new ArrayList<Value>();
 		args.add(new Word(Word.Type.word, "a0"));
 		body.add(new Word(Word.Type.word, "repeat"));
-		body.add(new Word(Word.Type.number, "1"));
-		body.add(new Word(Word.Type.wordValue, ":a0"));
+		body.add(new Word(Word.Type.word, "1"));
+		body.add(new Word(Word.Type.value, ":a0"));
 		list.add(new List(args));
 		list.add(new List(body));
 		this.context.put("run", new List(list));

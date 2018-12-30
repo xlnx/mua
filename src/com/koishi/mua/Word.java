@@ -3,14 +3,13 @@ package com.koishi.mua;
 class Word extends Value {
 
 	public enum Type {
-		word        (0x0000100),
-		wordLiteral (0x0000200),
-		wordValue   (0x0000400),
-		number      (0x0000800),
-		bool        (0x0001000),
-		bracket     (0x0002000),
-		lbracket    (0x0010000 | bracket.getMask()),
-		rbracket    (0x0020000 | bracket.getMask());
+		word          (0x0400),
+		literal       (0x0001),
+		value         (0x0002),
+
+		bracket       (0x0004),
+		right         (0x1000|bracket.mask),
+		left          (0x2000|bracket.mask);
 
 		private final int mask;
 
@@ -27,8 +26,8 @@ class Word extends Value {
 		}
 	}
 
-	private final Type type;
-	private final String value;
+	protected final Type type;
+	protected final String value;
 
 	String getValue() {
 		return value;
@@ -55,5 +54,10 @@ class Word extends Value {
 	Word(Type type, String value) {
 		this.type = type;
 		this.value = value;
+	}
+
+	<T>Word(T value) {
+		this.type = Type.word;
+		this.value = "" + value;
 	}
 }

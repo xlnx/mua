@@ -1,5 +1,6 @@
 package com.koishi.mua;
 
+import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiConsole;
 
 import java.io.InputStream;
@@ -17,7 +18,7 @@ public class VM {
 			try {
 				var result = interpreter.interpret(line);
 				if (result != null) {
-					System.out.print(" ");
+					System.out.print(Ansi.ansi().fg(Ansi.Color.GREEN).a(" < ").reset());
 					result.print();
 					System.out.println();
 				}
